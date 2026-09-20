@@ -31,9 +31,15 @@ Entity Registry::CreateEntity() {
     int entityId;
     entityId = numEntities++;
     Entity entity(entityId);
+    entity.registry = this;
     entitiesToBeAdded.insert(entity);
 
-    Logger::Log("Entity created with id = " + entityId);
+    // Make sure the entityComponentSignatures vector can accomodate the new entity 
+    if (entityId >= static_cast<int>(entityComponentSignatures.size())) {
+        entityComponentSignatures.resize(entityId + 1);
+    }
+
+    Logger::Log("Entity created with id = " + std::to_string(entityId));
 
     return entity;
 }
@@ -53,7 +59,11 @@ void Registry::AddEntityToSystems(Entity entity) {
 }
 
 void Registry::Update() {
-    
+    // Add the entities that are waiting to be created to the active System
+    for (auto entity: entitiesToBeAdded) {
+        AddEntityToSystems(entity);
+    }
+    entitiesToBeAdded.clear();
 }
 
 
