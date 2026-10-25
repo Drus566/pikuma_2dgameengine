@@ -9,6 +9,9 @@
 #include "../Systems/MovementSystem.h"
 #include "../Systems/RenderSystem.h"
 #include "../Systems/AnimationSystem.h"
+#include "../Systems/CollisionSystem.h"
+#include "../Systems/RenderColliderSystem.h"
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <glm/glm.hpp>
@@ -16,6 +19,7 @@
 #include <fstream>
 
 Game::Game() {
+    isDebug = false;
     isRunning = false;
     registry = std::make_unique<Registry>();
     assetStore = std::make_unique<AssetStore>();
@@ -78,6 +82,9 @@ void Game::ProcessInput() {
                 if (sdlEvent.key.keysym.sym == SDLK_ESCAPE) {
                     isRunning = false;
                 }
+                if (sdlEvent.key.keysym.sym == SDLK_d) {
+                    isDebug = !isDebug;
+                }
                 break;
         }
     }
@@ -88,6 +95,8 @@ void Game::LoadLevel(int level) {
     registry->AddSystem<MovementSystem>();
     registry->AddSystem<RenderSystem>();
     registry->AddSystem<AnimationSystem>();
+    registry->AddSystem<CollisionSystem>();
+    registry->AddSystem<RenderColliderSystem>();
 
     // Adding assets to the asset store
     assetStore->AddTexture(renderer, "chopper-image", "./assets/images/chopper.png");
@@ -143,6 +152,8 @@ void Game::LoadLevel(int level) {
     truck.AddComponent<RigidBodyComponent>(glm::vec2(20.0, 0.0));
     truck.AddComponent<SpriteComponent>("truck-image", 32, 32, 1);
     truck.AddComponent<BoxColliderComponent>(32, 32);
+
+    // tank.Kill();
 }
 
 void Game::Setup() {
@@ -163,7 +174,8 @@ void Game::Update() {
 
     // Ask all the systems to update
     registry->GetSystem<MovementSystem>().Update(deltaTime);
-    registry->GetSystem<AnimationSystem>().Update(deltaTime);
+    registry->GetSystem<AnimationSystem>().Update();
+    registry->GetSystem<CollisionSystem>().Update();
 
     // Update the registry to process the entities that are waiting to be created/deleted
     registry->Update(); 
@@ -176,6 +188,9 @@ void Game::Render() {
 
     // Invoke all the systems that need to update
     registry->GetSystem<RenderSystem>().Update(renderer, assetStore); 
+    if (isDebug) {
+        registry->GetSystem<RenderColliderSystem>().Update(renderer);
+    }
 
     SDL_RenderPresent(renderer);
 }

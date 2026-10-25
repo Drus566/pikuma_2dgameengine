@@ -13,7 +13,7 @@ class AnimationSystem: public System {
             RequireComponent<AnimationComponent>();
         }
 
-        void Update(double deltaTime) {
+        void Update() {
             for (auto entity: GetSystemEntities()) {
                 auto& animation = entity.GetComponent<AnimationComponent>();
                 auto& sprite = entity.GetComponent<SpriteComponent>();
